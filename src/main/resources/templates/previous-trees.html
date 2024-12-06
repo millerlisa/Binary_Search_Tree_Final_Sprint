@@ -1,5 +1,58 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="en" xmlns:th="http://www.thymeleaf.org">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>Previous Trees</title>-->
+<!--    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">-->
+<!--    <style>-->
+<!--        body {-->
+<!--            background-color: #f8f9fa;-->
+<!--            padding-top: 50px;-->
+<!--        }-->
+<!--        .container {-->
+<!--            max-width: 800px;-->
+<!--            background: #fff;-->
+<!--            padding: 20px;-->
+<!--            border-radius: 8px;-->
+<!--            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);-->
+<!--        }-->
+<!--        h1 {-->
+<!--            margin-bottom: 20px;-->
+<!--        }-->
+<!--        ul {-->
+<!--            list-style-type: none;-->
+<!--            padding: 0;-->
+<!--        }-->
+<!--        li {-->
+<!--            background: #e9ecef;-->
+<!--            margin: 5px 0;-->
+<!--            padding: 10px;-->
+<!--            border-radius: 4px;-->
+<!--        }-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--<div class="container">-->
+<!--    <h1 class="text-center">Previous Trees</h1>-->
+<!--    <div>-->
+<!--        <ul>-->
+<!--            <th:block th:each="tree : ${trees}">-->
+<!--                <li>-->
+<!--                    <pre th:text="${tree}"></pre>-->
+<!--                </li>-->
+<!--            </th:block>-->
+<!--        </ul>-->
+<!--    </div>-->
+<!--</div>-->
+<!--<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>-->
+<!--<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>-->
+<!--<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>-->
+<!--</body>-->
+<!--</html>-->
+
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +64,7 @@
             padding-top: 50px;
         }
         .container {
-            max-width: 800px;
+            max-width: 900px;
             background: #fff;
             padding: 20px;
             border-radius: 8px;
@@ -20,29 +73,44 @@
         h1 {
             margin-bottom: 20px;
         }
-        ul {
+        .tree-list {
             list-style-type: none;
             padding: 0;
         }
-        li {
-            background: #e9ecef;
-            margin: 5px 0;
-            padding: 10px;
-            border-radius: 4px;
+        .tree-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .tree-list li:last-child {
+            border-bottom: none;
+        }
+        .tree-list a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        .tree-list a:hover {
+            text-decoration: underline;
+        }
+        .btn-custom {
+            background-color: #007bff;
+            color: #fff;
         }
     </style>
 </head>
 <body>
 <div class="container">
     <h1 class="text-center">Previous Trees</h1>
-    <div>
-        <ul>
-            <th:block th:each="tree : ${trees}">
-                <li>
-                    <pre th:text="${tree}"></pre>
-                </li>
-            </th:block>
-        </ul>
+    <ul class="tree-list">
+        <!-- Iterate over the list of trees -->
+        <li th:each="tree : ${trees}">
+            <a th:href="@{'/visualize-tree/' + ${tree.id}}" th:text="'Input: ' + ${tree.inputNumbers}"></a>
+        </li>
+    </ul>
+
+    <div class="d-flex justify-content-center mt-4">
+        <form action="/enter-numbers" method="get">
+            <button type="submit" class="btn btn-custom">Enter New Numbers</button>
+        </form>
     </div>
 </div>
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

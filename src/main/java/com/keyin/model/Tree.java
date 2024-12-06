@@ -1,6 +1,13 @@
 package com.keyin.model;
 
-public class BinarySearchTree {
+import jakarta.persistence.*;
+
+public class Tree {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @OneToOne(cascade = CascadeType.ALL)
     private TreeNode root;
 
     public void insert(int value) {
@@ -20,7 +27,9 @@ public class BinarySearchTree {
         return root;
     }
 
-    public TreeNode getRoot() {
-        return root;
-    }
+    public Long getId() {return id;}
+    public void setId(Long id) {this.id = id;}
+
+    public TreeNode getRoot() {return root;}
+    public void setRoot(TreeNode root) {this.root = root;}
 }

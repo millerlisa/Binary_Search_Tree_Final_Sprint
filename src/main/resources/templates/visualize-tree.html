@@ -1,51 +1,204 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualize Tree</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="/js/tree-visualization.js"></script>
+    <title>Binary Search Tree Visualization</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {
             background-color: #f8f9fa;
             padding-top: 50px;
+            font-family: Arial, sans-serif;
         }
         .container {
-            max-width: 600px;
+            max-width: 900px;
             background: #fff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        h1 {
-            margin-bottom: 20px;
+        h1, h2 {
+            text-align: center;
+        }
+        #treeContainer {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            overflow-x: auto;
         }
         .btn-custom {
             background-color: #007bff;
             color: #fff;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
         }
-        #tree-container {
-            margin-top: 20px;
+        .node circle {
+            fill: #77DFF3;
+            stroke: #333;
+            stroke-width: 2px;
+        }
+        .node text {
+            font: 12px sans-serif;
+            text-anchor: middle;
+        }
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 2px;
+        }
+        pre#jsonTree {
+            background: #fafafa;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow: auto;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1 class="text-center">Visualize Tree</h1>
-    <pre id="tree-json" th:text="${tree}"></pre>
-    <button onclick="visualizeTree(treeData)" class="btn btn-custom btn-block">Visualize Tree</button>
-    <div id="tree-container"></div>
-</div>
-<script th:inline="javascript">
-    /*<![CDATA[*/
-    var treeData = /*[[${tree}]]*/ {};
-    /*]]>*/
-</script>
+    <h1>Binary Search Tree Visualization</h1>
 
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <h2>Graphical Representation:</h2>
+    <div id="treeContainer"></div>
+
+    <h2>JSON Representation:</h2>
+    <pre id="jsonTree" class="bg-light p-3 rounded"></pre>
+
+    <h2>What would you like to do next?</h2>
+    <div class="d-flex justify-content-around mt-4">
+        <form action="/enter-numbers" method="get">
+            <button type="submit" class="btn btn-custom">Enter New Numbers</button>
+        </form>
+        <form action="/previous-trees" method="get">
+            <button type="submit" class="btn btn-secondary">View Previous Trees</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Replace this line with the JSON data passed by the server
+    const treeData = {
+        "value": 8,
+        "left": {
+            "value": 3,
+            "left": {
+                "value": 1
+            },
+            "right": {
+                "value": 6
+            }
+        },
+        "right": {
+            "value": 10,
+            "right": {
+                "value": 14
+            }
+        }
+    };
+
+    // Display the JSON representation
+    document.getElementById('jsonTree').innerText = JSON.stringify(treeData, null, 2);
+
+    function assignCoordinates(root) {
+        if (!root) return;
+
+        const levels = [];
+        function traverse(node, depth, x, offset) {
+            if (!node) return;
+            if (!levels[depth]) levels[depth] = [];
+            levels[depth].push({ node, x, depth });
+            traverse(node.left, depth + 1, x - offset, offset / 2);
+            traverse(node.right, depth + 1, x + offset, offset / 2);
+        }
+
+        traverse(root, 0, 400, 100);
+
+        const coords = [];
+        levels.forEach((level, depth) => {
+            level.forEach(n => {
+                coords.push({
+                    node: n.node,
+                    x: n.x,
+                    y: 50 + depth * 80,
+                    depth
+                });
+            });
+        });
+        return coords;
+    }
+
+    function drawTree(treeData) {
+        if (!treeData) return;
+
+        const coordinates = assignCoordinates(treeData);
+        if (!coordinates) return;
+
+        const minX = Math.min(...coordinates.map(c => c.x));
+        const maxX = Math.max(...coordinates.map(c => c.x));
+        const maxY = Math.max(...coordinates.map(c => c.y));
+
+        const width = maxX - minX + 200;
+        const height = maxY + 100;
+
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("width", width);
+        svg.setAttribute("height", height);
+
+        const nodeToCoord = new Map();
+        coordinates.forEach(c => nodeToCoord.set(c.node, c));
+
+        coordinates.forEach(c => {
+            if (c.node.left) {
+                const childCoord = nodeToCoord.get(c.node.left);
+                addLine(svg, c.x - minX + 50, c.y, childCoord.x - minX + 50, childCoord.y);
+            }
+            if (c.node.right) {
+                const childCoord = nodeToCoord.get(c.node.right);
+                addLine(svg, c.x - minX + 50, c.y, childCoord.x - minX + 50, childCoord.y);
+            }
+        });
+
+        coordinates.forEach(c => {
+            addNode(svg, c.x - minX + 50, c.y, c.node.value);
+        });
+
+        const treeContainer = document.getElementById('treeContainer');
+        treeContainer.innerHTML = '';
+        treeContainer.appendChild(svg);
+    }
+
+    function addLine(svg, x1, y1, x2, y2) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("class", "link");
+        line.setAttribute("x1", x1);
+        line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2);
+        line.setAttribute("y2", y2);
+        svg.appendChild(line);
+    }
+
+    function addNode(svg, x, y, value) {
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        g.setAttribute("class", "node");
+        g.setAttribute("transform", `translate(${x},${y})`);
+
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("r", 20);
+        g.appendChild(circle);
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.textContent = value;
+        g.appendChild(text);
+
+        svg.appendChild(g);
+    }
+
+    drawTree(treeData);
+</script>
 </body>
 </html>
