@@ -10,6 +10,9 @@ public class Tree {
     @OneToOne(cascade = CascadeType.ALL)
     private TreeNode root;
 
+    public Tree() {}
+    public Tree(TreeNode root) {this.root = root;}
+
     public void insert(int value) {
         root = insertRec(root, value);
     }

@@ -1,16 +1,276 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8" />-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>-->
+<!--    <title>Binary Search Tree Visualization</title>-->
+<!--    <style>-->
+<!--        body {-->
+<!--            background-color: #f8f9fa;-->
+<!--            padding: 20px;-->
+<!--            font-family: Arial, sans-serif;-->
+<!--        }-->
+
+<!--        h1, h2 {-->
+<!--            text-align: center;-->
+<!--        }-->
+
+<!--        .container {-->
+<!--            max-width: 800px;-->
+<!--            margin: 0 auto;-->
+<!--            background: #fff;-->
+<!--            padding: 20px;-->
+<!--            border-radius: 8px;-->
+<!--            box-shadow: 0 0 10px rgba(0,0,0,0.1);-->
+<!--        }-->
+
+<!--        form {-->
+<!--            text-align: center;-->
+<!--            margin-bottom: 20px;-->
+<!--        }-->
+
+<!--        input[type="text"] {-->
+<!--            width: 300px;-->
+<!--            padding: 8px;-->
+<!--        }-->
+
+<!--        button {-->
+<!--            padding: 8px 16px;-->
+<!--            margin-left: 10px;-->
+<!--            background-color: #007bff;-->
+<!--            border: none;-->
+<!--            color: #fff;-->
+<!--            border-radius: 4px;-->
+<!--        }-->
+
+<!--        #treeContainer {-->
+<!--            display: flex;-->
+<!--            justify-content: center;-->
+<!--            margin-top: 20px;-->
+<!--            overflow-x: auto;-->
+<!--        }-->
+
+<!--        svg {-->
+<!--            background: #fafafa;-->
+<!--            border: 1px solid #ccc;-->
+<!--        }-->
+
+<!--        .node circle {-->
+<!--            fill: #77DFF3;-->
+<!--            stroke: #333;-->
+<!--            stroke-width: 2px;-->
+<!--        }-->
+
+<!--        .node text {-->
+<!--            font: 12px sans-serif;-->
+<!--            text-anchor: middle;-->
+<!--            dominant-baseline: central;-->
+<!--        }-->
+
+<!--        .link {-->
+<!--            stroke: #ccc;-->
+<!--            stroke-width: 2px;-->
+<!--        }-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--<div class="container">-->
+<!--    <h1>Binary Search Tree Visualization</h1>-->
+<!--    <form id="inputForm">-->
+<!--        <input type="text" id="numbers" placeholder="Enter numbers, e.g. 8,3,10,1,6,14"/>-->
+<!--        <button type="submit">Build Tree</button>-->
+<!--    </form>-->
+<!--    <h2>Tree:</h2>-->
+<!--    <div id="treeContainer"></div>-->
+<!--</div>-->
+
+<!--<script>-->
+<!--    class TreeNode {-->
+<!--        constructor(value) {-->
+<!--            this.value = value;-->
+<!--            this.left = null;-->
+<!--            this.right = null;-->
+<!--        }-->
+<!--    }-->
+
+<!--    class BST {-->
+<!--        constructor() {-->
+<!--            this.root = null;-->
+<!--        }-->
+
+<!--        insert(value) {-->
+<!--            if (!this.root) {-->
+<!--                this.root = new TreeNode(value);-->
+<!--            } else {-->
+<!--                this._insertNode(this.root, value);-->
+<!--            }-->
+<!--        }-->
+
+<!--        _insertNode(node, value) {-->
+<!--            if (value < node.value) {-->
+<!--                if (node.left === null) {-->
+<!--                    node.left = new TreeNode(value);-->
+<!--                } else {-->
+<!--                    this._insertNode(node.left, value);-->
+<!--                }-->
+<!--            } else if (value > node.value) {-->
+<!--                if (node.right === null) {-->
+<!--                    node.right = new TreeNode(value);-->
+<!--                } else {-->
+<!--                    this._insertNode(node.right, value);-->
+<!--                }-->
+<!--            }-->
+<!--        }-->
+<!--    }-->
+
+<!--    // Layout algorithm:-->
+<!--    // We'll do a level-order traversal and assign coordinates.-->
+<!--    // Each level is 80px down from the previous.-->
+<!--    // Horizontally, start from a midpoint and move left/right for children.-->
+<!--    function assignCoordinates(root) {-->
+<!--        if (!root) return;-->
+
+<!--        let levels = [];-->
+<!--        function traverse(node, depth, x, offset) {-->
+<!--            if (!node) return;-->
+<!--            if (!levels[depth]) levels[depth] = [];-->
+<!--            // Push node with assigned coordinates-->
+<!--            levels[depth].push({node, x, depth});-->
+<!--            // For children:-->
+<!--            // Move left child to x - offset, right child to x + offset-->
+<!--            // Decrease offset for next level to place children closer together-->
+<!--            traverse(node.left, depth + 1, x - offset, offset / 2);-->
+<!--            traverse(node.right, depth + 1, x + offset, offset / 2);-->
+<!--        }-->
+
+<!--        // Start at some x (like 400) and offset (like 100)-->
+<!--        traverse(root, 0, 400, 100);-->
+
+<!--        // Flatten levels back into a list to return coordinates-->
+<!--        let coords = [];-->
+<!--        for (let depth = 0; depth < levels.length; depth++) {-->
+<!--            for (let n of levels[depth]) {-->
+<!--                // y position based on depth-->
+<!--                let y = 50 + depth * 80;-->
+<!--                coords.push({ node: n.node, x: n.x, y, depth });-->
+<!--            }-->
+<!--        }-->
+<!--        return coords;-->
+<!--    }-->
+
+<!--    function drawTree(root) {-->
+<!--        if (!root) return;-->
+
+<!--        const coordinates = assignCoordinates(root);-->
+<!--        if (!coordinates) return;-->
+
+<!--        // Map each node to its coords for easy lookup-->
+<!--        let nodeToCoord = new Map();-->
+<!--        for (let c of coordinates) {-->
+<!--            nodeToCoord.set(c.node, c);-->
+<!--        }-->
+
+<!--        // Compute the SVG dimensions based on min/max x-->
+<!--        let minX = Math.min(...coordinates.map(c => c.x));-->
+<!--        let maxX = Math.max(...coordinates.map(c => c.x));-->
+<!--        let maxY = Math.max(...coordinates.map(c => c.y));-->
+
+<!--        let width = maxX - minX + 200; // Some padding-->
+<!--        let height = maxY + 100;-->
+
+<!--        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");-->
+<!--        svg.setAttribute("width", width);-->
+<!--        svg.setAttribute("height", height);-->
+
+<!--        // Create links (lines)-->
+<!--        for (let c of coordinates) {-->
+<!--            let { node } = c;-->
+<!--            if (node.left) {-->
+<!--                let parentCoord = c;-->
+<!--                let childCoord = nodeToCoord.get(node.left);-->
+<!--                addLine(svg, parentCoord.x - minX + 50, parentCoord.y, childCoord.x - minX + 50, childCoord.y);-->
+<!--            }-->
+<!--            if (node.right) {-->
+<!--                let parentCoord = c;-->
+<!--                let childCoord = nodeToCoord.get(node.right);-->
+<!--                addLine(svg, parentCoord.x - minX + 50, parentCoord.y, childCoord.x - minX + 50, childCoord.y);-->
+<!--            }-->
+<!--        }-->
+
+<!--        // Create nodes (circles + text)-->
+<!--        for (let c of coordinates) {-->
+<!--            let xPos = c.x - minX + 50;-->
+<!--            let yPos = c.y;-->
+
+<!--            addNode(svg, xPos, yPos, c.node.value);-->
+<!--        }-->
+
+<!--        const treeContainer = document.getElementById('treeContainer');-->
+<!--        treeContainer.innerHTML = '';-->
+<!--        treeContainer.appendChild(svg);-->
+<!--    }-->
+
+<!--    function addLine(svg, x1, y1, x2, y2) {-->
+<!--        let line = document.createElementNS("http://www.w3.org/2000/svg", "line");-->
+<!--        line.setAttribute("class", "link");-->
+<!--        line.setAttribute("x1", x1);-->
+<!--        line.setAttribute("y1", y1);-->
+<!--        line.setAttribute("x2", x2);-->
+<!--        line.setAttribute("y2", y2);-->
+<!--        svg.appendChild(line);-->
+<!--    }-->
+
+<!--    function addNode(svg, x, y, value) {-->
+<!--        let g = document.createElementNS("http://www.w3.org/2000/svg", "g");-->
+<!--        g.setAttribute("class", "node");-->
+<!--        g.setAttribute("transform", `translate(${x},${y})`);-->
+
+<!--        let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");-->
+<!--        circle.setAttribute("r", 20);-->
+<!--        g.appendChild(circle);-->
+
+<!--        let text = document.createElementNS("http://www.w3.org/2000/svg", "text");-->
+<!--        text.textContent = value;-->
+<!--        g.appendChild(text);-->
+
+<!--        svg.appendChild(g);-->
+<!--    }-->
+
+<!--    document.getElementById('inputForm').addEventListener('submit', (e) => {-->
+<!--        e.preventDefault();-->
+<!--        const input = document.getElementById('numbers').value;-->
+<!--        if (!input.trim()) return;-->
+
+<!--        const nums = input.split(',').map(n => parseInt(n.trim(), 10)).filter(n => !isNaN(n));-->
+<!--        if (nums.length === 0) return;-->
+
+<!--        let bst = new BST();-->
+<!--        nums.forEach(num => bst.insert(num));-->
+
+<!--        drawTree(bst.root);-->
+<!--    });-->
+<!--</script>-->
+<!--</body>-->
+<!--</html>-->
+
+
+
+
+
+
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Binary Search Tree Visualization</title>
+    <title>Visualize Tree</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {
             background-color: #f8f9fa;
             padding-top: 50px;
-            font-family: Arial, sans-serif;
         }
         .container {
             max-width: 900px;
@@ -28,12 +288,14 @@
             margin-top: 20px;
             overflow-x: auto;
         }
-        .btn-custom {
-            background-color: #007bff;
-            color: #fff;
-            padding: 8px 16px;
-            border: none;
+        pre#jsonTree {
+            background: #fafafa;
+            padding: 15px;
+            border: 1px solid #ccc;
             border-radius: 4px;
+            max-height: 300px;
+            overflow: auto;
+            white-space: pre-wrap; /* Prevent horizontal scrolling for JSON */
         }
         .node circle {
             fill: #77DFF3;
@@ -49,30 +311,25 @@
             stroke: #ccc;
             stroke-width: 2px;
         }
-        pre#jsonTree {
-            background: #fafafa;
-            padding: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            max-height: 300px;
-            overflow: auto;
-        }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>Binary Search Tree Visualization</h1>
 
-    <h2>Graphical Representation:</h2>
-    <div id="treeContainer"></div>
+    <!-- Tree Graphic -->
+<!--    <h2>Graphical Representation:</h2>-->
+<!--    <div id="treeContainer"></div>-->
 
-    <h2>JSON Representation:</h2>
-    <pre id="jsonTree" class="bg-light p-3 rounded"></pre>
+    <!-- JSON Representation -->
+    <h2>JSON Representation</h2>
+    <pre id="jsonTree" th:text="${jsonTree}" class="bg-light p-3 rounded"></pre>
 
+    <!-- Navigation Buttons -->
     <h2>What would you like to do next?</h2>
     <div class="d-flex justify-content-around mt-4">
         <form action="/enter-numbers" method="get">
-            <button type="submit" class="btn btn-custom">Enter New Numbers</button>
+            <button type="submit" class="btn btn-secondary">Enter New Numbers</button>
         </form>
         <form action="/previous-trees" method="get">
             <button type="submit" class="btn btn-secondary">View Previous Trees</button>
@@ -81,91 +338,228 @@
 </div>
 
 <script>
-    // Replace this line with the JSON data passed by the server
-    const treeData = {
-        "value": 8,
-        "left": {
-            "value": 3,
-            "left": {
-                "value": 1
-            },
-            "right": {
-                "value": 6
+    // Parse the JSON tree for the graphic
+    const treeElement = document.getElementById('jsonTree');
+
+    if (treeElement && treeElement.innerText.trim() !== "") {
+        try {
+            const treeData = JSON.parse(treeElement.innerText);
+
+            function drawTree(treeData) {
+                const margin = { top: 20, right: 120, bottom: 20, left: 120 };
+                const width = 800 - margin.right - margin.left;
+                const height = 500 - margin.top - margin.bottom;
+
+                const svg = d3.select("#treeContainer").append("svg")
+                    .attr("width", width + margin.right + margin.left)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+                const tree = d3.tree().size([height, width]);
+                const root = d3.hierarchy(treeData);
+
+                tree(root);
+
+                svg.selectAll(".link")
+                    .data(root.links())
+                    .enter().append("path")
+                    .attr("class", "link")
+                    .attr("d", d3.linkHorizontal()
+                        .x(d => d.y)
+                        .y(d => d.x));
+
+                const node = svg.selectAll(".node")
+                    .data(root.descendants())
+                    .enter().append("g")
+                    .attr("class", "node")
+                    .attr("transform", d => `translate(${d.y},${d.x})`);
+
+                node.append("circle")
+                    .attr("r", 10);
+
+                node.append("text")
+                    .attr("dy", ".35em")
+                    .attr("x", d => d.children ? -13 : 13)
+                    .style("text-anchor", d => d.children ? "end" : "start")
+                    .text(d => d.data.value);
             }
-        },
-        "right": {
-            "value": 10,
-            "right": {
-                "value": 14
+
+            drawTree(treeData);
+        } catch (error) {
+            console.error("Failed to parse tree data:", error);
+        }
+    } else {
+        console.warn("JSON tree data is empty or invalid.");
+    }
+</script>
+<script>
+    // Render the tree using D3.js
+    function drawTree(treeData) {
+        const margin = { top: 20, right: 120, bottom: 20, left: 120 };
+        const width = 800 - margin.right - margin.left;
+        const height = 500 - margin.top - margin.bottom;
+
+        const svg = d3.select("#treeContainer").append("svg")
+            .attr("width", width + margin.right + margin.left)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const tree = d3.tree().size([height, width]);
+        const root = d3.hierarchy(treeData);
+
+        // Compute the tree layout
+        tree(root);
+
+        // Draw links
+        svg.selectAll(".link")
+            .data(root.links())
+            .enter().append("path")
+            .attr("class", "link")
+            .attr("d", d3.linkHorizontal()
+                .x(d => d.y)
+                .y(d => d.x));
+
+        // Draw nodes
+        const node = svg.selectAll(".node")
+            .data(root.descendants())
+            .enter().append("g")
+            .attr("class", "node")
+            .attr("transform", d => `translate(${d.y},${d.x})`);
+
+        node.append("circle")
+            .attr("r", 10);
+
+        node.append("text")
+            .attr("dy", ".35em")
+            .attr("x", d => d.children ? -13 : 13)
+            .style("text-anchor", d => d.children ? "end" : "start")
+            .text(d => d.data.value);
+    }
+
+    drawTree(treeData);
+</script>
+<script>
+    class TreeNode {
+        constructor(value) {
+            this.value = value;
+            this.left = null;
+            this.right = null;
+        }
+    }
+
+    class BST {
+        constructor() {
+            this.root = null;
+        }
+
+        insert(value) {
+            if (!this.root) {
+                this.root = new TreeNode(value);
+            } else {
+                this._insertNode(this.root, value);
             }
         }
-    };
 
-    // Display the JSON representation
-    document.getElementById('jsonTree').innerText = JSON.stringify(treeData, null, 2);
+        _insertNode(node, value) {
+            if (value < node.value) {
+                if (node.left === null) {
+                    node.left = new TreeNode(value);
+                } else {
+                    this._insertNode(node.left, value);
+                }
+            } else if (value > node.value) {
+                if (node.right === null) {
+                    node.right = new TreeNode(value);
+                } else {
+                    this._insertNode(node.right, value);
+                }
+            }
+        }
+    }
 
+    // Layout algorithm:
+    // We'll do a level-order traversal and assign coordinates.
+    // Each level is 80px down from the previous.
+    // Horizontally, start from a midpoint and move left/right for children.
     function assignCoordinates(root) {
         if (!root) return;
 
-        const levels = [];
+        let levels = [];
         function traverse(node, depth, x, offset) {
             if (!node) return;
             if (!levels[depth]) levels[depth] = [];
-            levels[depth].push({ node, x, depth });
+            // Push node with assigned coordinates
+            levels[depth].push({node, x, depth});
+            // For children:
+            // Move left child to x - offset, right child to x + offset
+            // Decrease offset for next level to place children closer together
             traverse(node.left, depth + 1, x - offset, offset / 2);
             traverse(node.right, depth + 1, x + offset, offset / 2);
         }
 
+        // Start at some x (like 400) and offset (like 100)
         traverse(root, 0, 400, 100);
 
-        const coords = [];
-        levels.forEach((level, depth) => {
-            level.forEach(n => {
-                coords.push({
-                    node: n.node,
-                    x: n.x,
-                    y: 50 + depth * 80,
-                    depth
-                });
-            });
-        });
+        // Flatten levels back into a list to return coordinates
+        let coords = [];
+        for (let depth = 0; depth < levels.length; depth++) {
+            for (let n of levels[depth]) {
+                // y position based on depth
+                let y = 50 + depth * 80;
+                coords.push({ node: n.node, x: n.x, y, depth });
+            }
+        }
         return coords;
     }
 
-    function drawTree(treeData) {
-        if (!treeData) return;
+    function drawTree(root) {
+        if (!root) return;
 
-        const coordinates = assignCoordinates(treeData);
+        const coordinates = assignCoordinates(root);
         if (!coordinates) return;
 
-        const minX = Math.min(...coordinates.map(c => c.x));
-        const maxX = Math.max(...coordinates.map(c => c.x));
-        const maxY = Math.max(...coordinates.map(c => c.y));
+        // Map each node to its coords for easy lookup
+        let nodeToCoord = new Map();
+        for (let c of coordinates) {
+            nodeToCoord.set(c.node, c);
+        }
 
-        const width = maxX - minX + 200;
-        const height = maxY + 100;
+        // Compute the SVG dimensions based on min/max x
+        let minX = Math.min(...coordinates.map(c => c.x));
+        let maxX = Math.max(...coordinates.map(c => c.x));
+        let maxY = Math.max(...coordinates.map(c => c.y));
 
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        let width = maxX - minX + 200; // Some padding
+        let height = maxY + 100;
+
+        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("width", width);
         svg.setAttribute("height", height);
 
-        const nodeToCoord = new Map();
-        coordinates.forEach(c => nodeToCoord.set(c.node, c));
-
-        coordinates.forEach(c => {
-            if (c.node.left) {
-                const childCoord = nodeToCoord.get(c.node.left);
-                addLine(svg, c.x - minX + 50, c.y, childCoord.x - minX + 50, childCoord.y);
+        // Create links (lines)
+        for (let c of coordinates) {
+            let { node } = c;
+            if (node.left) {
+                let parentCoord = c;
+                let childCoord = nodeToCoord.get(node.left);
+                addLine(svg, parentCoord.x - minX + 50, parentCoord.y, childCoord.x - minX + 50, childCoord.y);
             }
-            if (c.node.right) {
-                const childCoord = nodeToCoord.get(c.node.right);
-                addLine(svg, c.x - minX + 50, c.y, childCoord.x - minX + 50, childCoord.y);
+            if (node.right) {
+                let parentCoord = c;
+                let childCoord = nodeToCoord.get(node.right);
+                addLine(svg, parentCoord.x - minX + 50, parentCoord.y, childCoord.x - minX + 50, childCoord.y);
             }
-        });
+        }
 
-        coordinates.forEach(c => {
-            addNode(svg, c.x - minX + 50, c.y, c.node.value);
-        });
+        // Create nodes (circles + text)
+        for (let c of coordinates) {
+            let xPos = c.x - minX + 50;
+            let yPos = c.y;
+
+            addNode(svg, xPos, yPos, c.node.value);
+        }
 
         const treeContainer = document.getElementById('treeContainer');
         treeContainer.innerHTML = '';
@@ -173,7 +567,7 @@
     }
 
     function addLine(svg, x1, y1, x2, y2) {
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
         line.setAttribute("class", "link");
         line.setAttribute("x1", x1);
         line.setAttribute("y1", y1);
@@ -183,22 +577,34 @@
     }
 
     function addNode(svg, x, y, value) {
-        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
         g.setAttribute("class", "node");
         g.setAttribute("transform", `translate(${x},${y})`);
 
-        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute("r", 20);
         g.appendChild(circle);
 
-        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
         text.textContent = value;
         g.appendChild(text);
 
         svg.appendChild(g);
     }
 
-    drawTree(treeData);
+    document.getElementById('inputForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('numbers').value;
+        if (!input.trim()) return;
+
+        const nums = input.split(',').map(n => parseInt(n.trim(), 10)).filter(n => !isNaN(n));
+        if (nums.length === 0) return;
+
+        let bst = new BST();
+        nums.forEach(num => bst.insert(num));
+
+        drawTree(bst.root);
+    });
 </script>
 </body>
 </html>
